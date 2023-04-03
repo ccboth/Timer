@@ -19,6 +19,7 @@
 // Звуковое сопровождение при пропикивании/окончании отсчета
 #define KB_SWITCH_ECHO          9
 
-
+/// @brief Получает номер нажатой кнопки
+/// @return Номер нажатой кнопки
 uint8_t keypadGetKey(void);
 uint8_t keypadOutState(void);

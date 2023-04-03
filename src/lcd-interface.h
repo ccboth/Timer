@@ -21,35 +21,6 @@
 #define RS              5
 #define E               4
 
-// class LcdInterface {
-//     private: PortState _dataPort, _e, _rs;
-
-
-//     /// @brief Инициализация дисплея
-//     /// @param dataPort порт для вывода данных
-//     /// @param E Ножка строба
-//     /// @param RS Ножка переключения между командами и текстом
-//     // public: LcdInterface(PortState dataPort, PortState Es, PortState RSs);
-//     /// @brief Вывод символа на текущую позицию
-//     /// @param symbol Выводимый символ
-//     public: void printChar(char symbol);
-//     /// @brief Отправка команды LCD дисплею
-//     /// @param cmd Команда
-//     public: void sendCommand(char cmd);
-//     /// @brief Вывод строки с текущей позиции без задержки
-//     /// @param string Строка
-//     public: void printStr(const char* string);
-//     /// @brief Установка курсора в позицию. Чтобы позицию не изменить следует передать параметром -1
-//     /// @param x Позиция в строке
-//     /// @param line Строка
-//     public: void setPosition(char x, char line);
-//     /// @brief Очистка дисплея и возврат в самое начальное положение
-//     public: void clear();
-// };
-
-/// @brief Задержка в милисекундах
-/// @param ms 
-// void delayMs(unsigned int ms);
 /// @brief Инициализация дисплея
 void lcdInit(void);
 /// @brief Вывод символа на текущую позицию

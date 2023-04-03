@@ -9,10 +9,8 @@
 #include "keypad.h"
 #include "macro.h"
 
-#define TIMER_HIGHT 253
-#define TIME_BOUDN	5999999ULL
-#define USER_ADDR	0x0
-
+#define TIMER_HIGHT 253 			// Настройка таймера этим числом
+#define TIME_BOUDN	5999999ULL		// Максимальное число totalTime
 
 #define getSeconds(seconds) (time)seconds*1000
 #define getMinutes(minutes)	getSeconds(minutes)*60ULL
@@ -21,13 +19,13 @@ typedef unsigned char 			bool;
 typedef unsigned long long		time;
 
 /// @brief Итого, сколько сейчас милисекунд
-time totalMilliseconds = 0;
+time totalTime = 0;
 /// @brief Настройки пользователя
 time userSettingMilliseconds = 0;
 
 // Если TRUE - Считаем обратно(Timer)
 // Если FALSE - Считаем прямо(Secondsmer)
-bool 			returnInvoice 	= 0;
+bool 			returnInvoice 	= false;
 /// @brief Работает ли счет секунд или нет
 bool			isRunner		= false;
 /// @brief Пропикивать ли
@@ -49,9 +47,9 @@ ISR(TIMER0_OVF_vect) {
 	TCNT0H = TIMER_HIGHT;
 	// Если у нас обратный режим - убавляем милисекунду
 	if (returnInvoice) {
-		totalMilliseconds--;
+		totalTime--;
 		// Если время вышло
-		if (!totalMilliseconds) {
+		if (!totalTime) {
 			// Выключим прерывания
 			clearBit(TCCR0B, CS00);
 			// Отключим состояния
@@ -75,10 +73,10 @@ ISR(TIMER0_OVF_vect) {
 	}
 	// Если нет - прибавляем
 	else {
-		totalMilliseconds++;
+		totalTime++;
 		// Если время достигло своей границы
-		if (totalMilliseconds == TIME_BOUDN) {
-			totalMilliseconds = 0;
+		if (totalTime == TIME_BOUDN) {
+			totalTime = 0;
 			clearBit(TCCR0B, CS00);
 			isRunner = false;
 			outTimeOnDisplay();
@@ -171,7 +169,7 @@ void keypadHandler(uint8_t state) {
 	if (state == KB_SwitchMode) returnInvoice = !returnInvoice;
 	else if (state == KB_START) {
 		// Сохраним настройки пользователя
-		userSettingMilliseconds = totalMilliseconds;
+		userSettingMilliseconds = totalTime;
 		// настройка таймера
 		TCNT0H = TIMER_HIGHT;
 		// включение прерываний таймера
@@ -208,32 +206,32 @@ void keypadHandler(uint8_t state) {
 		else 							delta = 0;
 		// Проверка на безопасность
 		// Если сумма больше границы, (Только для прибавки)
-		if (((delta + totalMilliseconds) > TIME_BOUDN) && state == KB_IncCurrentNum) 
+		if (((delta + totalTime) > TIME_BOUDN) && state == KB_IncCurrentNum) 
 			// То разница будет просто до конца
-			delta = TIME_BOUDN - totalMilliseconds;
+			delta = TIME_BOUDN - totalTime;
 		// Если же разница больше чем глобальное время
-		else if ((delta > totalMilliseconds) && state == KB_DecCurrentNum)
+		else if ((delta > totalTime) && state == KB_DecCurrentNum)
 			// то приравниваем их
-			delta = totalMilliseconds;
+			delta = totalTime;
 
 		// Теперь уже решим что делать
-		if (state == KB_IncCurrentNum) totalMilliseconds = totalMilliseconds + delta;
-		else totalMilliseconds -= delta;
+		if (state == KB_IncCurrentNum) totalTime += delta;
+		else totalTime -= delta;
 		// Выключить курсор, пока обновляем время
 		lcdCommand(lCmdDisableCur);
 		outTimeOnDisplay();
 		// Включим обратно
 		lcdCommand(lCmdEnableCur);
-		userSettingMilliseconds = totalMilliseconds;
+		userSettingMilliseconds = totalTime;
 	}
 	else if (state == KB_CLEAR) {
-		totalMilliseconds = 0;
+		totalTime = 0;
 		lcdCommand(lCmdDisableCur);
 		outTimeOnDisplay();
 		lcdCommand(lCmdEnableCur);
 	}
 	else if (state == KB_RETURN) {
-		totalMilliseconds = userSettingMilliseconds;
+		totalTime = userSettingMilliseconds;
 		lcdCommand(lCmdDisableCur);
 		outTimeOnDisplay();
 		lcdCommand(lCmdEnableCur);
@@ -246,7 +244,7 @@ void keypadHandler(uint8_t state) {
 void outTimeOnDisplay(void) {
 	uint8_t cursorLastPosition = lcdGetCursorPositionX();
 	char buffer[10];
-	uint32_t milliseconds = totalMilliseconds;
+	uint32_t milliseconds = totalTime;
 	uint32_t seconds = (milliseconds / 1000);
 	uint32_t minutes = seconds / 60;
 	// Вычитаем из милисекунд секунды
@@ -293,8 +291,4 @@ void outTimeOnDisplay(void) {
 
 	lcdPrintChar('-');
 	lcdSetPosition(cursorLastPosition, 1);
-}
-
-void timerConfigure(void) {
-	
 }
